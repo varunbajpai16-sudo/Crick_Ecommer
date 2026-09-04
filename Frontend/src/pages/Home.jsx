@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -181,6 +181,34 @@ const reviews = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  useEffect(() => {
+    const start = performance.now();
+    let frameId;
+
+    const updateProgress = (now) => {
+      const elapsed = now - start;
+      const progress = Math.min((elapsed / 5000) * 100, 100);
+      setLoadingProgress(progress);
+
+      if (progress < 100) {
+        frameId = requestAnimationFrame(updateProgress);
+      }
+    };
+
+    frameId = requestAnimationFrame(updateProgress);
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timer);
+    };
+  }, []);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [filter, setFilter] = useState("All");
   const [cartCount, setCartCount] = useState(0);
@@ -221,6 +249,110 @@ export default function Home() {
   };
 
   return (
+    <>
+      {loading && (
+        <div className="fixed inset-0 z-[9999] overflow-hidden bg-[#050606] text-white">
+          <style>{`
+            @keyframes loaderBall {
+              0% { transform: translate3d(0, -10px, 0) rotate(0deg); }
+              18% { transform: translate3d(22vw, 5px, 0) rotate(110deg); }
+              38% { transform: translate3d(43vw, -7px, 0) rotate(240deg); }
+              58% { transform: translate3d(63vw, 6px, 0) rotate(390deg); }
+              78% { transform: translate3d(82vw, -5px, 0) rotate(540deg); }
+              100% { transform: translate3d(105vw, 0, 0) rotate(720deg); }
+            }
+
+            @keyframes loaderTrail {
+              0%, 100% { opacity: 0; transform: scaleX(0.2); }
+              15%, 75% { opacity: 0.7; transform: scaleX(1); }
+              90% { opacity: 0; transform: scaleX(0.4); }
+            }
+
+            @keyframes loaderPulse {
+              0%, 100% { opacity: 0.35; transform: scale(0.98); }
+              50% { opacity: 1; transform: scale(1); }
+            }
+
+            @keyframes loaderScan {
+              0% { transform: translateX(-110%); }
+              100% { transform: translateX(210%); }
+            }
+
+            .cricx-loader-ball {
+              animation: loaderBall 5s cubic-bezier(.18,.75,.2,1) forwards;
+            }
+
+            .cricx-loader-trail {
+              animation: loaderTrail 5s ease-in-out forwards;
+            }
+
+            .cricx-loader-pulse {
+              animation: loaderPulse 1.4s ease-in-out infinite;
+            }
+
+            .cricx-loader-scan {
+              animation: loaderScan 1.8s cubic-bezier(.4,0,.2,1) infinite;
+            }
+
+            @media (max-width: 640px) {
+              @keyframes loaderBall {
+                0% { transform: translate3d(0, -10px, 0) rotate(0deg); }
+                22% { transform: translate3d(20vw, 5px, 0) rotate(110deg); }
+                45% { transform: translate3d(43vw, -7px, 0) rotate(240deg); }
+                68% { transform: translate3d(66vw, 6px, 0) rotate(390deg); }
+                100% { transform: translate3d(108vw, 0, 0) rotate(720deg); }
+              }
+            }
+          `}</style>
+
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(22,163,74,.14),transparent_28%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,.04),transparent_42%)]" />
+
+          <div className="absolute left-0 right-0 top-[54%] h-px bg-white/10">
+            <div className="cricx-loader-trail absolute left-0 top-1/2 h-[3px] w-32 -translate-y-1/2 origin-left bg-gradient-to-r from-transparent via-[#16A34A] to-white/80 blur-[1px]" />
+            <div className="cricx-loader-ball absolute left-[-18px] top-1/2 z-10 h-8 w-8 -translate-y-1/2 rounded-full bg-[#a91515] shadow-[0_0_22px_rgba(220,40,40,.35)]">
+              <div className="absolute left-1/2 top-[-2px] h-9 w-[2px] -translate-x-1/2 rotate-[38deg] rounded-full bg-white/80" />
+              <div className="absolute left-1/2 top-[-2px] h-9 w-[2px] -translate-x-1/2 -rotate-[38deg] rounded-full bg-white/80" />
+            </div>
+          </div>
+
+          <div className="relative flex h-full flex-col items-center justify-center px-6">
+            <div className="cricx-loader-pulse text-center">
+              <div className="font-['Space_Grotesk'] text-[4.5rem] font-bold leading-none tracking-[-0.1em] sm:text-[7rem]">
+                CRIC<span className="text-[#16A34A]">X</span>
+              </div>
+
+              <p className="mt-5 text-[9px] font-bold uppercase tracking-[0.38em] text-white/45 sm:text-[10px]">
+                PLAY BOLD. PLAY BETTER.
+              </p>
+            </div>
+
+            <div className="mt-32 w-full max-w-md">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/35">
+                  Preparing your game
+                </span>
+                <span className="font-mono text-[10px] font-bold text-[#16A34A]">
+                  {Math.round(loadingProgress)}%
+                </span>
+              </div>
+
+              <div className="relative h-[3px] overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#16A34A] shadow-[0_0_14px_rgba(22,163,74,.7)] transition-[width] duration-75"
+                  style={{ width: `${loadingProgress}%` }}
+                />
+                <div className="cricx-loader-scan absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+              </div>
+
+              <div className="mt-4 flex justify-between text-[8px] font-bold uppercase tracking-[0.2em] text-white/20">
+                <span>CRICX / 2026</span>
+                <span>Loading experience</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div className="min-h-screen bg-[#f7f7f5] text-[#111]">
       {/* =====================================================
           ANNOUNCEMENT BAR
@@ -1021,5 +1153,6 @@ export default function Home() {
         </div>
       )}
     </div>
+    </>
   );
 }
